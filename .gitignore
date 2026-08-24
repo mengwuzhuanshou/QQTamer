@@ -1,0 +1,27 @@
+# build outputs
+build/
+dist/
+*.apk
+# prebuilt apks committed for CI auto-release
+!apk/
+!apk/*.apk
+
+# signing keys must never be committed
+*.jks
+*.keystore
+*.pem
+signing.local
+
+# internal handoff notes (contains device serials & personal workflow)
+NOTES.md
+
+# session leftovers / diagnostics
+__pycache__/
+*.pyc
+tools/icon/*.ps1
+
+# local junk
+*.log
+_tmp/
+.DS_Store
+Thumbs.db
