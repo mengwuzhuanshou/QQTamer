@@ -1,5 +1,5 @@
 # QQTamer（QQ 净化助手 / QQ Keeper）
-
+本项目目前处于停止状态，连续测试发现理应是安全的hook仍然会触发踢下线的问题，再搞懂qq检测与回报之前本项目没有NTQQBattery (com.wkeqin.ntqqbattery)有价值
 > ## ⚠️ AI-generated module / 本模块由 AI 生成
 > 本项目由大语言模型（AI）在人类指导下生成，包括全部 Hook 代码、设置界面、构建流水线与文档。
 > 代码未经人工长期审计，请自行评估风险后使用；欢迎人工审查与 PR。
@@ -46,7 +46,7 @@ Every switch is independently reversible in the settings UI; the master switch d
 
 ## 鸣谢 / Acknowledgments
 
-本模块的实现思路与安全取舍参考了以下项目，在此致谢（仅参考思路，未复制代码；第三方许可证详见各自仓库）：
+##本模块的实现思路与安全取舍参考了以下项目，在此致谢（仅参考思路，未复制代码；第三方许可证详见各自仓库）：
 This module's approach and risk trade-offs are inspired by the following projects (ideas only, no code copied; see each repo for its license):
 
 | 项目 / Project | 贡献 / Contribution | 链接 / Link |
