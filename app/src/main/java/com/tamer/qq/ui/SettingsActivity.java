@@ -50,7 +50,7 @@ public class SettingsActivity extends Activity {
 
         TextView sub = new TextView(this);
         sub.setText("目标应用：com.tencent.mobileqq（手机 QQ 9.x）\n"
-                + "省电类钩子只在后台生效；热更新守卫会让全部热修补丁退回基线代码。\n"
+                + "省电类钩子只在后台生效；开屏广告拦截让冷启动直达主页。\n"
                 + "修改任意开关后，请在 LSPosed 中强制停止 QQ 后重新打开。");
         sub.setTextColor(Color.parseColor("#666666"));
         sub.setTextSize(13);
@@ -73,21 +73,9 @@ public class SettingsActivity extends Activity {
         addSwitch(QQConfig.KEY_TOMBSTONE_KEEP_PUSH, "墓碑保留消息推送保活", "Keep push alive in tombstone",
                 "默认开启；墓碑/后台拦截时豁免 MSF、推送服务与推送唤醒锁，收消息不受影响");
 
-        section("伪装回报", "Disguised reporting");
-        addSwitch(QQConfig.KEY_ENV_CLEAN, "环境探测报告清洗", "Clean env-probe reports",
-                "QQ 探测 Xposed/Magisk/SU 等包名时一律回报\"未安装\"，崩溃诊断报告呈现纯净环境");
-        addSwitch(QQConfig.KEY_BEACON_QUIET, "后台静默埋点(默认关)", "Quiet background beacon",
-                "默认关闭；后台丢弃 beacon 埋点省流量，理论上服务端可统计出空窗，介意风控勿开");
-
         section("开屏广告", "Splash ads");
         addSwitch(QQConfig.KEY_SPLASH_AD, "拦截开屏广告", "Block splash ads",
                 "掐断 vas-splash 缓存投喂与广告后跳转闸门；冷启动直达主页");
-
-        section("热更新守卫", "Hot-update guard");
-        addSwitch(QQConfig.KEY_QFIX_REDIRECT, "失效 QFix 补丁重定向", "Disable QFix redirect",
-                "PatchRedirectCenter 返回 null，全部热修补丁退回基线代码（null 安全，构造性无害）");
-        addSwitch(QQConfig.KEY_DEX_PATCH, "拦截补丁安装与 Tinker", "Block dex patch & Tinker",
-                "DexPatchInstaller.installDexPatch 吞掉 + TinkerPatchForeService 禁止启动");
 
         addSpace(dp * 20);
         TextView foot = new TextView(this);
@@ -214,13 +202,21 @@ public class SettingsActivity extends Activity {
         try {
             java.io.File tmp = new java.io.File(getFilesDir(), "qq_tamer_global.tmp");
             writeConf(tmp, data);
-            ProcessBuilder pb = new ProcessBuilder("su", "-c",
-                    "cat '" + tmp.getAbsolutePath() + "' > /data/local/tmp/"
-                            + QQConfig.CONF_NAME
-                            + " && chmod 644 /data/local/tmp/" + QQConfig.CONF_NAME);
-            pb.redirectErrorStream(true);
-            Process p = pb.start();
-            p.waitFor();
+            int rc = -1;
+            String[] suCmds = {
+                    "cat '" + tmp.getAbsolutePath() + "' > /data/local/tmp/" + QQConfig.CONF_NAME
+                            + " && chmod 644 /data/local/tmp/" + QQConfig.CONF_NAME,
+            };
+            try {
+                ProcessBuilder pb = new ProcessBuilder("su", "-c", suCmds[0]);
+                pb.redirectErrorStream(true);
+                Process p = pb.start();
+                rc = p.waitFor();
+            } catch (Throwable t) {
+                android.util.Log.e("QQTamer", "su conf sync ex: " + t);
+            }
+            android.util.Log.i("QQTamer", "global conf sync rc=" + rc
+                    + " (0 = ok; 其它值/异常 = root 未授权或 su 不可用，开关可能不生效)");
             tmp.delete();
         } catch (Throwable t) {
             android.util.Log.e(HookUtilTag(), "global conf sync ex", t);
@@ -231,10 +227,11 @@ public class SettingsActivity extends Activity {
 
     private static void writeConf(java.io.File f, byte[] data) {
         try {
-            java.io.FileOutputStream fos = new java.io.FileOutputStream(f);
-            fos.write(data);
-            fos.getFD().sync();
-            fos.close();
+            java.io.OutputStreamWriter w = new java.io.OutputStreamWriter(
+                    new java.io.FileOutputStream(f), "UTF-8");
+            w.write(new String(data, "UTF-8"));
+            w.flush();
+            w.close();
             android.system.Os.chmod(f.getAbsolutePath(), 0644);
         } catch (Throwable ignored) {
         }

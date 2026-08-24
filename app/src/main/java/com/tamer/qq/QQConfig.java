@@ -13,6 +13,8 @@ public final class QQConfig {
     public static final String PREFS_NAME = "qq_tamer_config";
     public static final String TARGET_PKG = "com.tencent.mobileqq";
     public static final String CONF_NAME = "qq_tamer.conf";
+    /** 实际生效的配置来源（日志排查用） */
+    public static volatile String sConfSource = "defaults";
 
     // ===== 总开关 =====
     public static final String KEY_MASTER = "master_enabled";
@@ -31,28 +33,19 @@ public final class QQConfig {
     /** 墓碑/后台拦截时保留消息推送相关保活（MSF/推送服务/推送唤醒锁，默认开） */
     public static final String KEY_TOMBSTONE_KEEP_PUSH = "power_tombstone_keep_push";
 
-    // ===== 伪装回报 =====
-    /** 环境探测报告清洗：xposed/magisk/su 等包名探测一律回报“未安装” */
-    public static final String KEY_ENV_CLEAN = "report_clean_env";
-    /** 后台静默 beacon 埋点(理论可被服务端统计发现，默认关) */
-    public static final String KEY_BEACON_QUIET = "report_quiet_beacon_bg";
+    // ===== 调试 =====
+    /** 调试：写存活标记文件到 QQ files 目录(默认关，减少指纹) */
+    public static final String KEY_DEBUG_ALIVE = "debug_alive_marker";
 
     // ===== 开屏广告 =====
     public static final String KEY_SPLASH_AD = "ad_block_splash";
-
-    // ===== 热更新守卫 =====
-    /** QFix 补丁重定向中心失效：所有热修补丁不再生效(null 安全) */
-    public static final String KEY_QFIX_REDIRECT = "hotfix_disable_redirect";
-    /** 拦截 DexPatchInstaller 安装 + Tinker 补丁服务 */
-    public static final String KEY_DEX_PATCH = "hotfix_block_dexpatch";
 
     public static final String[] ALL_KEYS = {
         KEY_MASTER,
         KEY_KEEPALIVE, KEY_BG_SERVICES, KEY_WAKELOCK_CAP, KEY_ALARM_RELAX, KEY_TOMBSTONE,
         KEY_TOMBSTONE_KEEP_PUSH,
-        KEY_ENV_CLEAN, KEY_BEACON_QUIET,
+        KEY_DEBUG_ALIVE,
         KEY_SPLASH_AD,
-        KEY_QFIX_REDIRECT, KEY_DEX_PATCH,
     };
 
     private final android.content.SharedPreferences sp;
@@ -72,11 +65,8 @@ public final class QQConfig {
         if (KEY_ALARM_RELAX.equals(key)) return false;
         if (KEY_TOMBSTONE.equals(key)) return false;
         if (KEY_TOMBSTONE_KEEP_PUSH.equals(key)) return true;
-        if (KEY_ENV_CLEAN.equals(key)) return true;
-        if (KEY_BEACON_QUIET.equals(key)) return false;
+        if (KEY_DEBUG_ALIVE.equals(key)) return false;
         if (KEY_SPLASH_AD.equals(key)) return true;
-        if (KEY_QFIX_REDIRECT.equals(key)) return true;
-        if (KEY_DEX_PATCH.equals(key)) return true;
         return false;
     }
 
@@ -86,6 +76,7 @@ public final class QQConfig {
         if (m != null) {
             return new QQConfig(new MapBackedPrefs(m));
         }
+        sConfSource = "xsp";
         return new QQConfig(new XspBackedPrefs(xsp));
     }
 
@@ -109,13 +100,17 @@ public final class QQConfig {
                         new java.io.InputStreamReader(new java.io.FileInputStream(f), "UTF-8"));
                 String line;
                 while ((line = br.readLine()) != null) {
+                    if (line.startsWith("\uFEFF")) line = line.substring(1); // 去 BOM
                     int i = line.indexOf('=');
                     if (i <= 0) continue;
                     m.put(line.substring(0, i).trim(),
                           "true".equals(line.substring(i + 1).trim()));
                 }
                 br.close();
-                if (!m.isEmpty()) return m;
+                if (!m.isEmpty()) {
+                    sConfSource = "conf:" + p;
+                    return m;
+                }
             } catch (Throwable ignored) {}
         }
         return null;

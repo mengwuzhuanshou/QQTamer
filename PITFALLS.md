@@ -55,6 +55,10 @@ XposedHelpers.findClass("android.app.ContextWrapper", 宿主CL) 在 LSPosed v2 �
 - 拉二进制文件用 adb exec-out 经 cmd /c 重定向，**不要用 PowerShell >**（会把二进制当文本编码破坏文件）；
 - 注意：外部直接替换 daemon 正在使用的 db（删 -wal/-shm 再 cp）有风险——曾观察到 daemon 后续把配置整体搬走/重建，导致模块启用状态丢失。改配置优先用 LSPosed 管理器 UI；必须直接改 db 时先停 lspd daemon 或整机重启后再替换。
 
+## 13. LSPosed v2 配置管道：设置页开关可能根本不会被目标进程读到（实锤）
+
+模块设置页写入的 SharedPreferences（LSPosed 重定向到 apexdata）在目标进程中 canRead=false；自身 files 目录的 conf 在目标进程视图里也可能指向重定向后的虚拟层。**唯一实测可靠生效的路径是 /data/local/tmp 下的 conf（644，任意进程可读）**——墓碑测试 push 的 conf 生效过，设置页的 su 同步则从未成功过（设备上 /data/local/tmp/qq_tamer.conf 一直不存在，直到手动 push）。症状：effective 日志恒为默认值、用户拨的开关全部无效。教训：① conf 解析必须去 BOM；② effective 日志必须带 confSrc= 来源字段；③ 设置页 su 同步要记录 rc 并在失败时提示；④ 上线前必须做「UI 拨开关 → 重启目标 → 看 effective」的闭环验证（本次整个 A/B 失真就是没做这个）。
+
 ## 12. 设备验证纪律（继承工作区通用交接）
 
 - adb 绝对路径 + 设备序列号见工作区交接文档；所有 adb 命令带 -s 序列号；

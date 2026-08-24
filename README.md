@@ -12,8 +12,8 @@
 面向**手机 QQ** `com.tencent.mobileqq`（实测适配 **9.3.35 / versionCode 15560**）的 LSPosed 模块。
 An LSPosed module for the **mobile QQ** app (`com.tencent.mobileqq`, tested against **9.3.35 / versionCode 15560**).
 
-四大功能：**省电 · 伪装回报 · 去开屏广告 · 热更新守卫**，外加环境探测报告清洗。
-Four feature groups: **power saving · disguised reporting · splash-ad removal · hot-update guard**, plus environment-probe report cleaning.
+两大功能：**省电 · 去开屏广告**。
+Two feature groups: **power saving · splash-ad removal**.
 
 ---
 
@@ -27,11 +27,7 @@ Four feature groups: **power saving · disguised reporting · splash-ad removal 
 | power_relax_alarms (关/off) | 后台 setExact* 降级为非精确闹钟 / Relax exact alarms in background |
 | power_tombstone_mode (关/off) | 激进墓碑：进后台立即停保活与杂项服务组 / Aggressive tombstone: stop keep-alive & misc services on background |
 | power_tombstone_keep_push (开/on) | 墓碑/后台拦截时保留消息推送保活（MSF/推送服务/推送唤醒锁豁免） / Keep message-push alive under tombstone (MSF/push services/wake-locks exempt) |
-| report_clean_env (开/on) | 环境探测清洗：xposed/magisk/su 等包名探测一律回报未安装 / Clean env probes: report xposed/magisk/su packages as not-installed |
-| report_quiet_beacon_bg (关/off) | 后台静默 beacon 埋点（理论可被服务端统计出空窗） / Quiet background beacon telemetry (server-side gap detectable in theory) |
 | ad_block_splash (开/on) | 拦截开屏广告：掐断 vas-splash 缓存投喂与广告跳转闸门 / Block splash ads at cache-feed & jump-gate |
-| hotfix_disable_redirect (开/on) | QFix 补丁重定向中心失效，全部热修补丁退回基线（null 安全） / Neutralize QFix redirect: all hot patches fall back to baseline (null-safe) |
-| hotfix_block_dexpatch (开/on) | 拦截 DexPatchInstaller 安装与 Tinker 补丁服务 / Block dex-patch install & Tinker patch service |
 
 所有开关可在设置页独立切换；总开关 master_enabled 关闭后模块完全休眠。
 Every switch is independently reversible in the settings UI; the master switch disables the whole module.
@@ -40,8 +36,7 @@ Every switch is independently reversible in the settings UI; the master switch d
 
 - 只做 Java 层钩子，不碰 native 库、不碰 MSF 协议与登录链路 / Java-layer hooks only; never touch native libs, MSF protocol or the login path;
 - 省电类钩子仅后台生效，前台体验零改动 / Power hooks act only in background; zero foreground impact;
-- 上报只清洗环境探测结果，不伪造服务端可校验的数据 / Reporting is only *cleaned*, never faked in server-verifiable ways;
-- 热更新守卫利用 QFix 全家的 null-safe 范式，构造性安全 / The hotfix guard is constructively safe via QFix's null-safe pattern;
+- 不做任何「返回假数据」式欺骗（曾有的环境探测清洗/热更守卫已因风控顾虑移除） / no fake-return deception of any kind (former env-probe cleaning & hotfix guard were removed over risk concerns);
 - 全部开关独立容错，任一 Hook 失败不影响宿主运行 / Every hook is fault-isolated; a failed hook never breaks the host.
 
 ## 鸣谢 / Acknowledgments
@@ -60,7 +55,7 @@ This module's approach and risk trade-offs are inspired by the following project
 ## 安装使用 / Installation
 
 1. Magisk/KernelSU + Zygisk + LSPosed 环境 / rooted device with Zygisk + LSPosed;
-2. 安装 `dist/QQTamer-v1.1.3.apk` / install the APK;
+2. 安装 `dist/QQTamer-v1.1.5.apk` / install the APK;
 3. LSPosed 中启用模块，作用域勾选 **QQ(com.tencent.mobileqq)** / enable in LSPosed and select the QQ scope;
 4. 打开模块桌面图标可调开关（纯代码 UI，无资源依赖）/ open the module's settings icon (pure-code UI);
 5. **强制停止 QQ 后重新打开**生效 / force-stop QQ and reopen for changes to take effect.
@@ -83,7 +78,6 @@ the signing keystore is supplied per-project via gitignored `tools/signing.local
 
 - GDT(gdtad) 实时拉新开屏未拦（v1 只掐 vas-splash 缓存投喂与跳转闸门）/ GDT real-time splash fetch not blocked yet (v1 covers vas-splash cache feed & jump gate);
 - 消息流/空间/小世界信息流广告未处理 / AIO feed / Qzone / mini-world in-feed ads not handled;
-- 后台静默埋点理论可被服务端统计出空窗（默认关）/ background beacon quieting is detectable in theory (off by default);
 - 仅主进程生效（:tool/:miniapp/:qzone 等子进程跳过）/ main process only (sub-processes skipped);
 - QQ 升级可能使混淆锚点漂移，升级后先看 `hook FAILED` 日志 / obfuscated anchors may drift on QQ updates — watch `hook FAILED` logs after upgrades.
 
