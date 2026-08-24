@@ -1,5 +1,5 @@
 # QQTamer（QQ 净化助手 / QQ Keeper）
-本项目目前处于停止状态，连续测试发现理应是安全的hook仍然会触发踢下线的问题，再搞懂qq检测与回报之前本项目没有NTQQBattery (com.wkeqin.ntqqbattery)有价值
+本项目目前处于停止状态，连续测试发现理应是安全的hook仍然会触发踢下线的问题，再搞懂qq检测与回报之前本项目没有NTQQBattery (com.wkeqin.ntqqbattery)更加具有价值
 > ## ⚠️ AI-generated module / 本模块由 AI 生成
 > 本项目由大语言模型（AI）在人类指导下生成，包括全部 Hook 代码、设置界面、构建流水线与文档。
 > 代码未经人工长期审计，请自行评估风险后使用；欢迎人工审查与 PR。
